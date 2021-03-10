@@ -15,7 +15,6 @@ struct MissionView: View {
         var isCommander: Bool {
             return role == "Commander"
         }
-        
     }
 
     let mission: Mission
@@ -38,17 +37,26 @@ struct MissionView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { fullView in
             ScrollView(.vertical) {
                 VStack {
-                    Image(self.mission.image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: geometry.size.width * 0.7)
-                        .padding(.top)
-                    
+                    GeometryReader { imageGeometry in
+                        Image(self.mission.image)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(.top)
+                            .frame(width: imageGeometry.size.width, height: imageGeometry.size.height)
+                            .scaleEffect(1 - self.scaleFactor(geometry: fullView, imageGeometry: imageGeometry))
+                            .offset(x: 0, y: self.scaleFactor(geometry: fullView, imageGeometry: imageGeometry) * imageGeometry.size.height / 2)
+                            
+                    }
+                    .frame(height: fullView.size.width * 0.75)
+
                     Text(self.mission.formattedLaunchDate)
-                        .padding()
+                        .font(.headline)
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading)
+                        .padding(.top)
 
                     Text(self.mission.description)
                         .padding()
@@ -93,6 +101,12 @@ struct MissionView: View {
             }
         }
         .navigationBarTitle(Text(mission.displayName), displayMode: .inline)
+    }
+    
+    private func scaleFactor (geometry: GeometryProxy, imageGeometry: GeometryProxy) -> CGFloat{
+        let imagePosition = imageGeometry.frame(in: .global).minY
+        let safeAreaHeight = geometry.safeAreaInsets.top
+        return (safeAreaHeight - imagePosition) / 500
     }
 }
 
